@@ -1,0 +1,24 @@
+﻿<h3>SquareComponent</h3>
+
+<div @onclick="@HandleClick">
+	@if (Square.Value != null)
+	{
+		<div>@Square.Value</div>
+	}
+	else
+	{
+		<div>None</div>
+	}
+</div>
+@code {
+	[Parameter]
+	public Square Square { get; set; }
+	[Parameter]
+	public Action? SquareClickParameter { get; set; }
+
+	public void HandleClick()
+	{
+		SquareClickParameter?.Invoke();
+	}
+
+}

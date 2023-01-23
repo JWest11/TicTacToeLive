@@ -1,0 +1,56 @@
+﻿@inject NavigationManager Navigation
+
+<h3>GameComponent</h3>
+@if (Game.Victory != null)
+{
+	<h4>@Game.Victory has won</h4>
+	<button @onclick="@(() => ResetGameClick())">Reset Game</button>
+}
+@foreach (var Square in Game.Squares)
+{
+	<SquareComponent SquareClickParameter="@(() => SquareClick(Square))" Square="@Square"></SquareComponent>
+}
+<button @onclick="UpdateGame">Update</button>
+
+@code {
+	private HubConnection? hubConnection;
+	private Game Game = new Game();
+	private SquareValueEnum Player;
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(Navigation.ToAbsoluteUri("/gamehub"))
+			.Build();
+
+		hubConnection.On<Game>("UpdateGame", (game) =>
+		{
+			Game = game;
+			InvokeAsync(StateHasChanged);
+		});
+
+		await hubConnection.StartAsync();
+	}
+
+	public void SquareClick(Square square)
+	{
+		if (Game.Victory is null && square.Value is null)
+		{
+			Game.Move(square);
+			StateHasChanged();
+		}
+
+	}
+	public void ResetGameClick()
+	{
+		Game.ResetGame();
+	}
+	private async Task UpdateGame()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.SendAsync("UpdateGame");
+		}
+	}
+}
